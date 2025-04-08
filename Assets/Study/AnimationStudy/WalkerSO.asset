@@ -1,0 +1,80 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8800c46a799f12846b21e6d753104430, type: 3}
+  m_Name: WalkerSO
+  m_EditorClassIdentifier: 
+  HorizontalCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: -0.5
+      inSlope: -0.19370489
+      outSlope: -0.19370489
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0.41687563
+    - serializedVersion: 3
+      time: 0.5
+      value: 0.5
+      inSlope: -0.1904028
+      outSlope: -0.1904028
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.46134567
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 0
+    m_RotationOrder: 4
+  VerticalCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0.035214197
+      outSlope: 0.035214197
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0.45640036
+    - serializedVersion: 3
+      time: 0.11000922
+      value: 0.032069765
+      inSlope: 0.8393104
+      outSlope: 0.8393104
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 1
+    - serializedVersion: 3
+      time: 0.15559189
+      value: 0.0919082
+      inSlope: 1.2245378
+      outSlope: 1.2245378
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.4511983
+    - serializedVersion: 3
+      time: 0.2536621
+      value: 0.15
+      inSlope: -0.048437968
+      outSlope: -0.048437968
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.8750755
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 0
+    m_RotationOrder: 4
