@@ -64,11 +64,8 @@ public class Controller : MonoBehaviour
 
 	void HandleMovement()
 	{
-		Debug.Log("direction" + direction);
 		var angleToDirection = Vector3.SignedAngle(transform.forward, new(direction.x, 0, direction.y), Vector3.up);
-		Debug.Log("angleToDirection" + angleToDirection);
 		var newDirection = isWalking ? Quaternion.AngleAxis(angleToDirection, Vector3.up) * Vector3.forward : Vector3.zero;
-		Debug.Log("New direction:" + newDirection);
 		animator.SetFloat(HorizontalConst, newDirection.x);
 		animator.SetFloat(VerticalConst, newDirection.z);
 		// velocity = new Vector3(direction.x, 0, direction.y) * (isRunning ? runSpeed : moveSpeed) * Time.deltaTime;

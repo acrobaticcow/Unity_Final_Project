@@ -739,6 +739,11 @@ MonoBehaviour:
   m_LightCookieSize: {x: 1, y: 1}
   m_LightCookieOffset: {x: 0, y: 0}
   m_SoftShadowQuality: 1
+--- !u!4 &540681199 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 3931047177301938319, guid: 77c4fadf9ee844e42863e72daafed51b, type: 3}
+  m_PrefabInstance: {fileID: 7171867503039141258}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &666406234
 GameObject:
   m_ObjectHideFlags: 0
@@ -1411,6 +1416,11 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1603107052}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!4 &1875154214 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 7770255752348302601, guid: 77c4fadf9ee844e42863e72daafed51b, type: 3}
+  m_PrefabInstance: {fileID: 7171867503039141258}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &2068408711
 GameObject:
   m_ObjectHideFlags: 0
@@ -1520,6 +1530,30 @@ PrefabInstance:
       propertyPath: m_ApplyRootMotion
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 3931047177301938319, guid: 77c4fadf9ee844e42863e72daafed51b, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.99934715
+      objectReference: {fileID: 0}
+    - target: {fileID: 3931047177301938319, guid: 77c4fadf9ee844e42863e72daafed51b, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0.036129255
+      objectReference: {fileID: 0}
+    - target: {fileID: 3931047177301938319, guid: 77c4fadf9ee844e42863e72daafed51b, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3931047177301938319, guid: 77c4fadf9ee844e42863e72daafed51b, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3931047177301938319, guid: 77c4fadf9ee844e42863e72daafed51b, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: -4.141
+      objectReference: {fileID: 0}
+    - target: {fileID: 3931047177301938319, guid: 77c4fadf9ee844e42863e72daafed51b, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6874110360293184195, guid: 77c4fadf9ee844e42863e72daafed51b, type: 3}
       propertyPath: m_Name
       value: Player
@@ -1538,7 +1572,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7167723283132726073, guid: 77c4fadf9ee844e42863e72daafed51b, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0
+      value: 0.7071068
       objectReference: {fileID: 0}
     - target: {fileID: 7167723283132726073, guid: 77c4fadf9ee844e42863e72daafed51b, type: 3}
       propertyPath: m_LocalRotation.x
@@ -1546,7 +1580,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7167723283132726073, guid: 77c4fadf9ee844e42863e72daafed51b, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 1
+      value: -0.7071068
       objectReference: {fileID: 0}
     - target: {fileID: 7167723283132726073, guid: 77c4fadf9ee844e42863e72daafed51b, type: 3}
       propertyPath: m_LocalRotation.z
@@ -1558,7 +1592,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7167723283132726073, guid: 77c4fadf9ee844e42863e72daafed51b, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
-      value: 180
+      value: -90
       objectReference: {fileID: 0}
     - target: {fileID: 7167723283132726073, guid: 77c4fadf9ee844e42863e72daafed51b, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
@@ -1568,6 +1602,14 @@ PrefabInstance:
       propertyPath: m_Constraints
       value: 112
       objectReference: {fileID: 0}
+    - target: {fileID: 7642540876370161302, guid: 77c4fadf9ee844e42863e72daafed51b, type: 3}
+      propertyPath: spine
+      value: 
+      objectReference: {fileID: 540681199}
+    - target: {fileID: 7642540876370161302, guid: 77c4fadf9ee844e42863e72daafed51b, type: 3}
+      propertyPath: hipbone
+      value: 
+      objectReference: {fileID: 1875154214}
     - target: {fileID: 7642540876370161302, guid: 77c4fadf9ee844e42863e72daafed51b, type: 3}
       propertyPath: smoothTime
       value: 0.001
