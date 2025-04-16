@@ -11,13 +11,13 @@ TagManager:
   - 
   - Water
   - UI
-  - Obstacles
+  - Obstacle
   - Player
-  - Enemies
+  - Enemy
   - Mask
   - Black
   - Ground
-  - 
+  - EnemyDetectionRadius
   - 
   - 
   - 

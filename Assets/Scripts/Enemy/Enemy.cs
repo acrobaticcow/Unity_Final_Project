@@ -1,33 +1,109 @@
 using UnityEngine.AI;
-
-public class Enemy : PoolableObject
+using UnityEngine;
+public abstract class Enemy : PoolableObject, IDamageable
 {
+	public EnemyLineOfSightCheck LineOfSightChecker;
+	public AttackRadius AttackRadius;
+	public Animator Animator;
 	public NavMeshAgent Agent;
 	public EnemyMovement Movement;
 	public EnemyScriptableObject EnemyScriptableObject;
-	int health = 100;
+	public int Health = 100;
+
+	public EnemyState DefaultState;
+	private EnemyState _state;
+	public EnemyState State
+	{
+		get
+		{
+			return _state;
+		}
+		set
+		{
+			OnStateChange?.Invoke(_state, value);
+			_state = value;
+		}
+	}
+	public float IdleLocationRadius = 4f;
+
+	public float IdleMoveSpeedMultiplier = 0.5f;
+
+	public delegate void StateChangeEvent(EnemyState oldState, EnemyState newState);
+	public StateChangeEvent OnStateChange;
+
+	public virtual void Awake()
+	{
+		OnStateChange += HandleStateChange;
+
+		LineOfSightChecker.OnGainSight += HandleGainSight;
+		LineOfSightChecker.OnLoseSight += HandleLoseSight;
+	}
+
+	public virtual void Update() { }
+	public virtual void Start() { }
+
+	public void Spawn()
+	{
+		Movement.SampleWaypoints();
+		OnStateChange?.Invoke(EnemyState.Spawn, DefaultState);
+	}
+	private void HandleGainSight(Controller player)
+	{
+		State = EnemyState.Chase;
+	}
+
+	private void HandleLoseSight(Controller player)
+	{
+		State = DefaultState;
+	}
+
+	private void HandleStateChange(EnemyState oldState, EnemyState newState)
+	{
+		if (oldState != newState)
+		{
+			Movement.StopMovement();
+
+			if (oldState == EnemyState.Idle)
+			{
+				Agent.speed /= IdleMoveSpeedMultiplier;
+			}
+
+			switch (newState)
+			{
+				case EnemyState.Idle:
+					Movement.StartIdleMotion();
+					break;
+				case EnemyState.Patrol:
+					Movement.StartPatrolMotion();
+					break;
+				case EnemyState.Chase:
+					Movement.StartChasing();
+					break;
+			}
+		}
+	}
+
 	public virtual void OnEnable()
 	{
-		SetupAgentConfiguration();
 	}
 	public override void OnDisable()
 	{
 		base.OnDisable();
 		Agent.enabled = false;
+		_state = DefaultState;
 	}
-	public virtual void SetupAgentConfiguration()
+	public void TakeDamage(int Damage)
 	{
-		Agent.acceleration = EnemyScriptableObject.Acceleration;
-		Agent.angularSpeed = EnemyScriptableObject.AngularSpeed;
-		Agent.areaMask = EnemyScriptableObject.AreaMask;
-		Agent.avoidancePriority = EnemyScriptableObject.AvoidancePriority;
-		Agent.baseOffset = EnemyScriptableObject.BaseOffset;
-		Agent.height = EnemyScriptableObject.Height;
-		Agent.obstacleAvoidanceType = EnemyScriptableObject.ObstacleAvoidanceType;
-		Agent.radius = EnemyScriptableObject.Radius;
-		Agent.speed = EnemyScriptableObject.Speed;
-		Agent.stoppingDistance = EnemyScriptableObject.StoppingDistance;
-		Movement.UpdateRate = EnemyScriptableObject.AIUpdateInterval;
-		health = EnemyScriptableObject.Health;
+		Health -= Damage;
+
+		if (Health <= 0)
+		{
+			gameObject.SetActive(false);
+		}
+	}
+
+	public Transform GetTransform()
+	{
+		return transform;
 	}
 }

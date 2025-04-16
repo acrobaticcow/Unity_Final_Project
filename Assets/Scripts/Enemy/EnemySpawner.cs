@@ -9,15 +9,17 @@ public class EnemySpawner : MonoBehaviour
 	public Transform Target;
 	public int SpawnCount;
 	public int SpawnDelay;
-	public List<Enemy> EnemyPrefabs = new();
+	// public List<Enemy> EnemyPrefabs = new();
+	public List<EnemyScriptableObject> Enemies = new();
+
 	public SpawnType SpawnMethod = SpawnType.RoundRobin;
 	NavMeshTriangulation triangulation;
 	Dictionary<int, ObjectPool> EnemyObjectPools = new();
 	void Awake()
 	{
-		for (int i = 0; i < EnemyPrefabs.Count; i++)
+		for (int i = 0; i < Enemies.Count; i++)
 		{
-			EnemyObjectPools.Add(i, ObjectPool.CreateInstance(EnemyPrefabs[i], SpawnCount));
+			EnemyObjectPools.Add(i, ObjectPool.CreateInstance(Enemies[i].Prefab, SpawnCount));
 		}
 	}
 	void Start()
@@ -39,7 +41,7 @@ public class EnemySpawner : MonoBehaviour
 					RoundRobinSpawnMethod(currentCount);
 					break;
 				case SpawnType.Random:
-					RandomSpawnMethod(Random.Range(0, EnemyPrefabs.Count));
+					RandomSpawnMethod();
 					break;
 			}
 
@@ -48,36 +50,37 @@ public class EnemySpawner : MonoBehaviour
 		}
 	}
 
-	private void RandomSpawnMethod(int enemyPrefabsIndex)
+	private void RandomSpawnMethod()
 	{
-		SpawnEnemy(enemyPrefabsIndex);
+		SpawnEnemy(Random.Range(0, Enemies.Count));
 	}
 
 	private void RoundRobinSpawnMethod(int currentSpawnCount)
 	{
-		int enemyPrefabsIndex = currentSpawnCount % EnemyPrefabs.Count;
+		int enemyPrefabsIndex = currentSpawnCount % Enemies.Count;
 		SpawnEnemy(enemyPrefabsIndex);
 	}
 
-	private void SpawnEnemy(int enemyPrefabsIndex)
+	private void SpawnEnemy(int spawnIndex)
 	{
-		PoolableObject poolObject = EnemyObjectPools[enemyPrefabsIndex].GetObject();
+		PoolableObject poolObject = EnemyObjectPools[spawnIndex].GetObject();
 
 		if (poolObject != null)
 		{
 			Enemy enemy = poolObject.GetComponent<Enemy>();
+			Enemies[spawnIndex].SetupEnemy(enemy);
+
 
 
 			int navMeshIndex = Random.Range(0, triangulation.vertices.Length);
 
-
-			NavMeshHit hit;
-			if (NavMesh.SamplePosition(triangulation.vertices[navMeshIndex], out hit, 2f, -1))
+			if (NavMesh.SamplePosition(triangulation.vertices[navMeshIndex], out NavMeshHit hit, 2f, -1))
 			{
 				enemy.Agent.Warp(hit.position);
 				enemy.Agent.enabled = true;
 				enemy.Movement.Target = Target;
-				enemy.Movement.StartChasing();
+				enemy.Movement.Triangulation = triangulation;
+				enemy.Spawn();
 			}
 			else
 			{
