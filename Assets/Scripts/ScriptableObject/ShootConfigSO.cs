@@ -13,11 +13,7 @@ public class ShootConfigSO : ScriptableObject
 	public Vector3 GetSpread(float ShootTime = 0)
 	{
 		return Vector3.Lerp(
-			new Vector3(
-				Random.Range(-Spread, Spread),
-				0,
-				Random.Range(-Spread, Spread)
-			),
+			Vector3.zero, // or any min spread
 			new Vector3(
 				Random.Range(-Spread, Spread),
 				0,

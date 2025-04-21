@@ -67,17 +67,17 @@ public class GunSO : ScriptableObject
 
 	public void TryToShoot()
 	{
-		if (Time.time - LastShootTime - ShootConfig.FireRate > Time.deltaTime)
+		if (Time.time - LastShootTime - ShootConfig.FireRate > Time.deltaTime) // If the time since the last shot exceeds the fire rate plus the time since the last frame, the weapon is ready to recover from recoil. AKA It been more than one frame that player can shot but did not, the weapon is ready to recover.
 		{
 			float lastDuration = Mathf.Clamp(
 				0,
 				StopShootingTime - InitialClickTime,
 				ShootConfig.MaxSpreadTime
-			);
+			); // * another way of saying “min(duration, maxSpreadTime)” but it make sure that duration is always from 0 and above
 			float lerpTime = (ShootConfig.RecoilRecoverySpeed - (Time.time - StopShootingTime))
-							 / ShootConfig.RecoilRecoverySpeed;
+							 / ShootConfig.RecoilRecoverySpeed; // As time progresses after shooting stops, lerpTime decreases from 1 to 0, indicating the recovery phase's progression.
 
-			InitialClickTime = Time.time - Mathf.Lerp(0, lastDuration, Mathf.Clamp01(lerpTime));
+			InitialClickTime = Time.time - Mathf.Lerp(0, lastDuration, Mathf.Clamp01(lerpTime)); // Artificially simulate initial click time closer to the current time to reduce the spread. 
 		}
 
 		if (Time.time > ShootConfig.FireRate + LastShootTime)
@@ -86,7 +86,6 @@ public class GunSO : ScriptableObject
 			ShootSystem.Play();
 
 			Vector3 spreadAmount = ShootConfig.GetSpread(Time.time - InitialClickTime);
-			// Vector3 spreadOvertime = Vector3.Lerp(Vector3.zero, spread, );
 
 			Vector3 shootDirection = ShootSystem.transform.forward;
 			Model.transform.forward += Model.transform.TransformDirection(spreadAmount);

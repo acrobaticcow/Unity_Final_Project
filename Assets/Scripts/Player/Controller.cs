@@ -33,11 +33,13 @@ public class Controller : MonoBehaviour, IDamageable
 	[SerializeField] PlayerGunSelector gunSelector;
 	[Header("Aim")]
 	public FieldOfView FieldOfView;
-	public float AimViewAngle;
+	public float AimAngle;
 	public float AimSpeed;
 	float defaultViewAngle;
 	float tAim;
 	public FOVVisualization FOVVisualization;
+	[Header("Focus")]
+	float initialFocusAngle;
 
 
 	void Awake()
@@ -52,38 +54,50 @@ public class Controller : MonoBehaviour, IDamageable
 		viewCamera = Camera.main;
 		bounds.Expand(-2 * skinWidth);
 		defaultViewAngle = FieldOfView.ViewAngle;
+		initialFocusAngle = AimAngle;
 	}
 
 	void Update()
 	{
+		Aim();
 		gunSelector.ActiveGun.Tick(
 			Application.isFocused && Mouse.current.leftButton.isPressed && gunSelector.ActiveGun != null
 		);
 		LookAtMouse();
 		HandleMovementAnimation();
-		Aim();
 	}
 	void FixedUpdate()
 	{
 		HandleMovement();
 	}
 	bool prevRightButtonPressed;
+
+	float currentFocusAngle;
+
 	void Aim()
 	{
 		bool isPressed = Mouse.current.rightButton.isPressed;
-		float endAngle = isPressed ? AimViewAngle : defaultViewAngle;
-		float startAngle = isPressed ? defaultViewAngle : AimViewAngle;
+		float endAngle = isPressed ? AimAngle : defaultViewAngle;
+		float startAngle = isPressed ? defaultViewAngle : AimAngle;
+		float currentViewAngle = FieldOfView.ViewAngle;
+		float spread = gunSelector.ActiveGun.ShootConfig.Spread;
 		if (isPressed != prevRightButtonPressed)
 		{
 			tAim = 0;
 		}
-		if (tAim < 1 && FieldOfView.ViewAngle != endAngle)
+		if (tAim < 1 && currentViewAngle != endAngle)
 		{
 			tAim += Time.deltaTime * AimSpeed;
 			float t = Mathf.Clamp01(tAim);
 			FieldOfView.ViewAngle = Mathf.Lerp(startAngle, endAngle, EaseOutCirc(t));
 		}
 		else { tAim = 0; }
+		// if (AimAngle == currentViewAngle && isPressed)
+		// {
+		// 	// TODO initialFocusAngle is an angle while spread is a point
+		// 	currentFocusAngle = Mathf.Lerp(initialFocusAngle, spread, lerp);
+
+		// }
 		prevRightButtonPressed = isPressed;
 	}
 
