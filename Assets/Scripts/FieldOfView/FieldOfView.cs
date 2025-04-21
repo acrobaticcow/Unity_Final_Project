@@ -1,11 +1,12 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 using System.Collections;
+using System;
 
 public class FieldOfView : MonoBehaviour
 {
 	[Range(0, 360)]
-	public float viewAngle;
+	public float ViewAngle;
 	public float viewRadius;
 
 	[HideInInspector]
@@ -28,13 +29,19 @@ public class FieldOfView : MonoBehaviour
 		};
 		viewMeshFilter.mesh = viewMesh;
 
-		StartCoroutine("FindTargetWithDelay", .2f);
-
+		StartCoroutine(FindTargetWithDelay(0.2f));
 	}
+
 	void LateUpdate()
 	{
+		// SyncIKTransformRotation();
 		DrawFieldOfView();
 	}
+
+	// private void SyncIKTransformRotation()
+	// {
+	// 	transform.rotation = FOVProxy.transform.rotation;
+	// }
 
 	IEnumerator FindTargetWithDelay(float delay)
 	{
@@ -59,7 +66,7 @@ public class FieldOfView : MonoBehaviour
 		foreach (Collider target in targetsInViewRadius)
 		{
 			Vector3 dirToTarget = (target.transform.position - transform.position).normalized;
-			if (Vector3.Angle(transform.forward, dirToTarget) < viewAngle / 2)
+			if (Vector3.Angle(transform.forward, dirToTarget) < ViewAngle / 2)
 			{
 				float disToTarget = Vector3.Distance(transform.position, target.transform.position);
 				if (!Physics.Raycast(transform.position, dirToTarget, disToTarget, obstaclesMask))
@@ -74,14 +81,14 @@ public class FieldOfView : MonoBehaviour
 	{
 
 		// casting line
-		int stepCount = Mathf.RoundToInt(viewAngle * meshResolution);
-		float lineAngleSize = viewAngle / stepCount;
+		int stepCount = Mathf.RoundToInt(ViewAngle * meshResolution);
+		float lineAngleSize = ViewAngle / stepCount;
 		List<Vector3> viewPoints = new();
 		ViewPointInfo oldViewCast = new();
 
 		for (int i = 0; i <= stepCount; i++)
 		{
-			float globalAngle = transform.eulerAngles.y - viewAngle / 2 + lineAngleSize * i;
+			float globalAngle = transform.eulerAngles.y - ViewAngle / 2 + lineAngleSize * i;
 			ViewPointInfo newViewCast = ViewCast(globalAngle);
 
 			if (i > 0)
@@ -101,18 +108,18 @@ public class FieldOfView : MonoBehaviour
 					if (edge.pointA != Vector3.zero)
 					{
 						viewPoints.Add(edge.pointA);
-						Debug.DrawLine(transform.position, edge.pointA, Color.green);
+						// Debug.DrawLine(transform.position, edge.pointA, Color.green);
 					}
 					if (edge.pointB != Vector3.zero)
 					{
 						viewPoints.Add(edge.pointB);
-						Debug.DrawLine(transform.position, edge.pointB, Color.green);
+						// Debug.DrawLine(transform.position, edge.pointB, Color.green);
 					}
 				}
 			}
 
 			viewPoints.Add(newViewCast.point);
-			Debug.DrawLine(transform.position, newViewCast.point, Color.red);
+			// Debug.DrawLine(transform.position, newViewCast.point, Color.red);
 			oldViewCast = newViewCast;
 
 		}
@@ -172,26 +179,25 @@ public class FieldOfView : MonoBehaviour
 		float maxAngle = maxViewCast.angle;
 		Vector3 minPoint = Vector3.zero;
 		Vector3 maxPoint = Vector3.zero;
-		ViewPointInfo betweenViewCast;
 
 		for (int i = 0; i < edgeResolvedIterations; i++)
 		{
-			float betweenAngle = (maxAngle + minAngle) / 2;
-			betweenViewCast = ViewCast(betweenAngle);
-			bool isEdgeDstThresholdExceed = Mathf.Abs(minViewCast.dis - maxViewCast.dis) > edgeDistThreshold;
+			float angle = (maxAngle + minAngle) / 2;
+			ViewPointInfo newViewCast = ViewCast(angle);
+			bool isEdgeDstThresholdExceed = Mathf.Abs(minViewCast.dis - newViewCast.dis) > edgeDistThreshold;
 			// Debug.Log("Find Edge ~ min view cast dis: " + minViewCast.dis);
 			// Debug.Log("Find Edge ~ max view cast dis: " + maxViewCast.dis);
 			// Debug.Log("isEdgeDstThresholdExceed" + isEdgeDstThresholdExceed);
 			// Debug.Log("----------");
-			if (betweenViewCast.hit == minViewCast.hit && !isEdgeDstThresholdExceed)
+			if (newViewCast.hit == minViewCast.hit && !isEdgeDstThresholdExceed)
 			{
-				minAngle = betweenAngle;
-				minPoint = betweenViewCast.point;
+				minAngle = angle;
+				minPoint = newViewCast.point;
 			}
 			else
 			{
-				maxAngle = betweenAngle;
-				maxPoint = betweenViewCast.point;
+				maxAngle = angle;
+				maxPoint = newViewCast.point;
 			}
 		}
 

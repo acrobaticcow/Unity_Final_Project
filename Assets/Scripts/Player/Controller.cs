@@ -1,15 +1,15 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-
-// todo make camera follow the player
+[DisallowMultipleComponent]
 public class Controller : MonoBehaviour, IDamageable
 {
 	public Animator animator;
 	const string velocityConst = "Velocity";
 	// Start is called once before the first execution of Update after the MonoBehaviour is created
-	public Transform SourceObj;
-	public Transform SourceObjOffset;
+	public Transform SpineTrackingSrc;
+	public Transform Model;
+	public float SpineTrackingVerticalOffset;
 	Camera viewCamera;
 	private Rigidbody rb;
 
@@ -18,9 +18,9 @@ public class Controller : MonoBehaviour, IDamageable
 
 	[Header("Stat")]
 	public int Health = 100;
-	public float maxSpeed = 5f;
-	public float accelerationTime = 0.2f;
-	public float decelerationTime = 0.1f;
+	public float MaxSpeed = 5f;
+	public float AccelerationTime = 0.2f;
+	public float DecelerationTime = 0.1f;
 	[Header("Collider")]
 	public LayerMask layerMask;
 	readonly int maxBounces = 5;
@@ -28,6 +28,17 @@ public class Controller : MonoBehaviour, IDamageable
 	new CapsuleCollider collider;
 	Bounds bounds;
 	Vector3 smoothedVel;
+
+	[Header("Gun")]
+	[SerializeField] PlayerGunSelector gunSelector;
+	[Header("Aim")]
+	public FieldOfView FieldOfView;
+	public float AimViewAngle;
+	public float AimSpeed;
+	float defaultViewAngle;
+	float tAim;
+	public FOVVisualization FOVVisualization;
+
 
 	void Awake()
 	{
@@ -40,21 +51,55 @@ public class Controller : MonoBehaviour, IDamageable
 	{
 		viewCamera = Camera.main;
 		bounds.Expand(-2 * skinWidth);
+		defaultViewAngle = FieldOfView.ViewAngle;
 	}
 
-	// Update is called once per frame
 	void Update()
 	{
-		// Debug.Log("Player position" + transform.position);
+		gunSelector.ActiveGun.Tick(
+			Application.isFocused && Mouse.current.leftButton.isPressed && gunSelector.ActiveGun != null
+		);
 		LookAtMouse();
 		HandleMovementAnimation();
+		Aim();
 	}
-
-
 	void FixedUpdate()
 	{
 		HandleMovement();
 	}
+	bool prevRightButtonPressed;
+	void Aim()
+	{
+		bool isPressed = Mouse.current.rightButton.isPressed;
+		float endAngle = isPressed ? AimViewAngle : defaultViewAngle;
+		float startAngle = isPressed ? defaultViewAngle : AimViewAngle;
+		if (isPressed != prevRightButtonPressed)
+		{
+			tAim = 0;
+		}
+		if (tAim < 1 && FieldOfView.ViewAngle != endAngle)
+		{
+			tAim += Time.deltaTime * AimSpeed;
+			float t = Mathf.Clamp01(tAim);
+			FieldOfView.ViewAngle = Mathf.Lerp(startAngle, endAngle, EaseOutCirc(t));
+		}
+		else { tAim = 0; }
+		prevRightButtonPressed = isPressed;
+	}
+
+	public void OnDrawGizmos()
+	{
+		Gizmos.color = Color.red;
+		Vector3 from = gunSelector.ActiveGun.Model.transform.position + (0.5f * Vector3.up);
+		float spread = gunSelector.ActiveGun.ShootConfig.Spread;
+		Vector3 dir1 = (FOVVisualization.transform.forward + FOVVisualization.transform.right * spread).normalized;
+		Vector3 dir2 = (FOVVisualization.transform.forward - FOVVisualization.transform.right * spread).normalized;
+		float length = 5;
+		Gizmos.DrawRay(from, dir1 * length);
+		Gizmos.DrawRay(from, dir2 * length);
+	}
+
+	float EaseOutCirc(float t) { return Mathf.Sqrt(1 - Mathf.Pow(t - 1, 2)); }
 	void LookAtMouse()
 	{
 		// Create a plane at the character's height
@@ -68,18 +113,18 @@ public class Controller : MonoBehaviour, IDamageable
 		{
 			Vector3 mousePos = ray.GetPoint(distance);
 
-			SourceObj.position = mousePos + Vector3.up * SourceObjOffset.position.y;
+			SpineTrackingSrc.position = mousePos + Vector3.up * SpineTrackingVerticalOffset;
 		}
 	}
 	#region Movement
 	void HandleMovementAnimation()
 	{
-		if (inputVector != Vector3.zero) transform.forward = inputVector;
+		if (inputVector != Vector3.zero)
+			Model.transform.forward = inputVector;
 		if (inputVector != Vector3.zero)
 			animator.SetFloat(velocityConst, 1);
 		else
 			animator.SetFloat(velocityConst, 0);
-
 	}
 
 	void HandleMovementEvent(InputAction.CallbackContext context)
@@ -90,12 +135,12 @@ public class Controller : MonoBehaviour, IDamageable
 
 	void HandleMovement()
 	{// Smooth movement with acceleration/deceleration
-		Vector3 targetVel = inputVector * maxSpeed;
+		Vector3 targetVel = inputVector * MaxSpeed;
 		smoothedVel = Vector3.SmoothDamp(
 		   rb.linearVelocity,
 		   targetVel,
 		   ref currentVelocity,
-		   inputVector.magnitude > 0 ? accelerationTime : decelerationTime
+		   inputVector.magnitude > 0 ? AccelerationTime : DecelerationTime
 	   );
 		var collide = CollideAndSlide(smoothedVel, collider.center, 0, smoothedVel);
 		rb.MovePosition(rb.position + collide * Time.fixedDeltaTime);

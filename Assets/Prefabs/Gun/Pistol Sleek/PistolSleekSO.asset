@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2407dc44a1f72ef4d966474c65acc53f, type: 3}
+  m_Name: PistolSleekSO
+  m_EditorClassIdentifier: 
+  Type: 0
+  Name: Pistol Sleek
+  ModelPrefab: {fileID: 3284819280069142300, guid: 923d7cf0cb8a3654591aca0e54a3924b, type: 3}
+  SpawnPoint: {x: 0, y: 0.3, z: 0.9}
+  SpawnRotation: {x: 0, y: 0, z: 0}
+  TrailConfig: {fileID: 11400000, guid: c55ab2cd8cbf6d848a925122cdb3cfac, type: 2}
+  ShootConfig: {fileID: 11400000, guid: 5c87718e2381e714fb2733c35dec96d2, type: 2}
+  Model: {fileID: 0}
