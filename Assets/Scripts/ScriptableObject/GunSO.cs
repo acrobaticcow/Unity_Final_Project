@@ -26,6 +26,7 @@ public class GunSO : ScriptableObject
 
 	float StopShootingTime;
 
+	float focusLerp;
 
 	public void Spawn(Transform parent, MonoBehaviour activeMonoBehaviour)
 	{
@@ -65,6 +66,14 @@ public class GunSO : ScriptableObject
 		}
 	}
 
+	/// <summary>
+	/// Expected to be called every frame
+	/// </summary>
+	public void StartFocus()
+	{
+
+	}
+
 	public void TryToShoot()
 	{
 		if (Time.time - LastShootTime - ShootConfig.FireRate > Time.deltaTime) // If the time since the last shot exceeds the fire rate plus the time since the last frame, the weapon is ready to recover from recoil. AKA It been more than one frame that player can shot but did not, the weapon is ready to recover.
@@ -85,7 +94,7 @@ public class GunSO : ScriptableObject
 			LastShootTime = Time.time;
 			ShootSystem.Play();
 
-			Vector3 spreadAmount = ShootConfig.GetSpread(Time.time - InitialClickTime);
+			Vector3 spreadAmount = ShootConfig.GetSpread(focusLerp);
 
 			Vector3 shootDirection = ShootSystem.transform.forward;
 			Model.transform.forward += Model.transform.TransformDirection(spreadAmount);

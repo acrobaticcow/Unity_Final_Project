@@ -5,21 +5,20 @@ using System.Linq;
 public class ShootConfigSO : ScriptableObject
 {
 	public LayerMask HitMask;
-	public float Spread = 0.4f;
+	public float MinSpread = 0.1f;
+	public float MaxSpread = 0.4f;
 	public float FireRate = 0.25f;
 	public float MaxSpreadTime = 1f;
 	public float RecoilRecoverySpeed = 1f;
 
-	public Vector3 GetSpread(float ShootTime = 0)
+	/// <param name="lerp">the ratio represent how long the player held focus</param>
+	public Vector3 GetSpread(float lerp)
 	{
-		return Vector3.Lerp(
-			Vector3.zero, // or any min spread
-			new Vector3(
-				Random.Range(-Spread, Spread),
-				0,
-				Random.Range(-Spread, Spread)
-			),
-			Mathf.Clamp01(ShootTime / MaxSpreadTime)
-		);
+		return Vector3.Lerp(new Vector3(Random.Range(-MaxSpread, MaxSpread), 0, Random.Range(-MaxSpread, MaxSpread)), new Vector3(Random.Range(-MinSpread, MinSpread), 0, Random.Range(-MinSpread, MinSpread)), lerp);
+	}
+
+	internal Vector3 GetSpread(object focusLerp)
+	{
+		throw new System.NotImplementedException();
 	}
 }
