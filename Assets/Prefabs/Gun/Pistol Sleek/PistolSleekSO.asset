@@ -17,6 +17,8 @@ MonoBehaviour:
   ModelPrefab: {fileID: 3284819280069142300, guid: 923d7cf0cb8a3654591aca0e54a3924b, type: 3}
   SpawnPoint: {x: 0, y: 0.3, z: 0.9}
   SpawnRotation: {x: 0, y: 0, z: 0}
+  DmgConfig: {fileID: 11400000, guid: 6998d5e7120125443b1a39a0532d72a5, type: 2}
   TrailConfig: {fileID: 11400000, guid: c55ab2cd8cbf6d848a925122cdb3cfac, type: 2}
   ShootConfig: {fileID: 11400000, guid: 5c87718e2381e714fb2733c35dec96d2, type: 2}
   Model: {fileID: 0}
+  tSpread: 0

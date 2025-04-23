@@ -1,166 +1,166 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.Pool;
-using System.Collections;
 
 [CreateAssetMenu(fileName = "Gun", menuName = "Guns/Gun", order = 0)]
 public class GunSO : ScriptableObject
 {
-	public GunType Type;
-	public string Name;
-	public GameObject ModelPrefab;
-	public Vector3 SpawnPoint; // local 
-	public Vector3 SpawnRotation; // local
+    public GunType Type;
+    public string Name;
+    public GameObject ModelPrefab;
+    public Vector3 SpawnPoint; // local
+    public Vector3 SpawnRotation; // local
 
-	public TrailConfigSO TrailConfig;
-	public ShootConfigSO ShootConfig;
+    public DmgConfigSO DmgConfig;
+    public TrailConfigSO TrailConfig;
+    public ShootConfigSO ShootConfig;
 
+    MonoBehaviour ActiveMonoBehaviour;
+    public GameObject Model;
+    ParticleSystem ShootSystem;
+    ObjectPool<TrailRenderer> TrailPool;
+    float LastShootTime;
 
-	MonoBehaviour ActiveMonoBehaviour;
-	public GameObject Model;
-	ParticleSystem ShootSystem;
-	ObjectPool<TrailRenderer> TrailPool;
-	float LastShootTime;
+    bool LastFrameWantedToShoot;
 
-	float InitialClickTime;
-	bool LastFrameWantedToShoot;
+    [HideInInspector]
+    public float tSpread;
 
-	float StopShootingTime;
+    public void Spawn(Transform parent, MonoBehaviour activeMonoBehaviour)
+    {
+        ActiveMonoBehaviour = activeMonoBehaviour;
+        LastShootTime = 0;
+        TrailPool = new(CreateTrail);
 
-	float focusLerp;
+        Model = Instantiate(ModelPrefab);
+        Model.transform.SetParent(parent, false);
+        Model.transform.SetLocalPositionAndRotation(SpawnPoint, Quaternion.Euler(SpawnRotation));
 
-	public void Spawn(Transform parent, MonoBehaviour activeMonoBehaviour)
-	{
-		ActiveMonoBehaviour = activeMonoBehaviour;
-		LastShootTime = 0;
-		TrailPool = new(CreateTrail);
+        ShootSystem = Model.GetComponentInChildren<ParticleSystem>();
 
-		Model = Instantiate(ModelPrefab);
-		Model.transform.SetParent(parent, false);
-		Model.transform.SetLocalPositionAndRotation(SpawnPoint, Quaternion.Euler(SpawnRotation));
+        ShootConfig.Init();
+    }
 
-		ShootSystem = Model.GetComponentInChildren<ParticleSystem>();
-	}
+    /// <summary>
+    /// Expected to be called every frame
+    /// </summary>
+    /// <param name="WantsToShoot">Whether or not the player is trying to shoot</param>
+    public void Tick(bool WantsToShoot)
+    {
+        Model.transform.localRotation = Quaternion.Lerp(
+            Model.transform.localRotation,
+            Quaternion.Euler(SpawnRotation),
+            Time.deltaTime * ShootConfig.RecoilRecoverySpeed
+        );
 
-	/// <summary>
-	/// Expected to be called every frame
-	/// </summary>
-	/// <param name="WantsToShoot">Whether or not the player is trying to shoot</param>
-	public void Tick(bool WantsToShoot)
-	{
-		Model.transform.localRotation = Quaternion.Lerp(
-			Model.transform.localRotation,
-			Quaternion.Euler(SpawnRotation),
-			Time.deltaTime * ShootConfig.RecoilRecoverySpeed
-		);
+        if (WantsToShoot)
+        {
+            LastFrameWantedToShoot = true;
+            TryToShoot();
+        }
 
-		if (WantsToShoot)
-		{
-			LastFrameWantedToShoot = true;
-			TryToShoot();
-		}
+        if (!WantsToShoot && LastFrameWantedToShoot)
+        {
+            LastFrameWantedToShoot = false;
+        }
+    }
 
-		if (!WantsToShoot && LastFrameWantedToShoot)
-		{
-			StopShootingTime = Time.time;
-			LastFrameWantedToShoot = false;
-		}
-	}
+    public void TryToShoot()
+    {
+        if (Time.time > ShootConfig.FireRate + LastShootTime)
+        {
+            LastShootTime = Time.time;
+            ShootSystem.Play();
 
-	/// <summary>
-	/// Expected to be called every frame
-	/// </summary>
-	public void StartFocus()
-	{
+            tSpread = Mathf.Clamp01(tSpread - ShootConfig.RecoilStrength);
+            Vector3 spreadAmount = ShootConfig.GetSpread(tSpread);
 
-	}
+            Vector3 shootDirection = ShootSystem.transform.forward;
+            shootDirection.Normalize();
+            Model.transform.forward += Model.transform.TransformDirection(spreadAmount);
+            if (
+                Physics.Raycast(
+                    ShootSystem.transform.position,
+                    shootDirection,
+                    out RaycastHit hit,
+                    float.MaxValue,
+                    ShootConfig.HitMask
+                )
+            )
+            {
+                ActiveMonoBehaviour.StartCoroutine(
+                    PlayTrail(ShootSystem.transform.position, hit.point, hit)
+                );
+            }
+            else
+            {
+                ActiveMonoBehaviour.StartCoroutine(
+                    PlayTrail(
+                        ShootSystem.transform.position,
+                        ShootSystem.transform.position
+                            + (shootDirection * TrailConfig.MissDistance),
+                        new RaycastHit()
+                    )
+                );
+            }
+        }
+    }
 
-	public void TryToShoot()
-	{
-		if (Time.time - LastShootTime - ShootConfig.FireRate > Time.deltaTime) // If the time since the last shot exceeds the fire rate plus the time since the last frame, the weapon is ready to recover from recoil. AKA It been more than one frame that player can shot but did not, the weapon is ready to recover.
-		{
-			float lastDuration = Mathf.Clamp(
-				0,
-				StopShootingTime - InitialClickTime,
-				ShootConfig.MaxSpreadTime
-			); // * another way of saying “min(duration, maxSpreadTime)” but it make sure that duration is always from 0 and above
-			float lerpTime = (ShootConfig.RecoilRecoverySpeed - (Time.time - StopShootingTime))
-							 / ShootConfig.RecoilRecoverySpeed; // As time progresses after shooting stops, lerpTime decreases from 1 to 0, indicating the recovery phase's progression.
+    private IEnumerator PlayTrail(Vector3 StartPoint, Vector3 EndPoint, RaycastHit Hit)
+    {
+        TrailRenderer instance = TrailPool.Get();
+        instance.gameObject.SetActive(true);
+        instance.transform.position = StartPoint;
+        yield return null; // avoid position carry-over from last frame if reused
 
-			InitialClickTime = Time.time - Mathf.Lerp(0, lastDuration, Mathf.Clamp01(lerpTime)); // Artificially simulate initial click time closer to the current time to reduce the spread. 
-		}
+        instance.emitting = true;
 
-		if (Time.time > ShootConfig.FireRate + LastShootTime)
-		{
-			LastShootTime = Time.time;
-			ShootSystem.Play();
+        float distance = Vector3.Distance(StartPoint, EndPoint);
+        float remainingDistance = distance;
+        while (remainingDistance > 0)
+        {
+            instance.transform.position = Vector3.Lerp(
+                StartPoint,
+                EndPoint,
+                Mathf.Clamp01(1 - (remainingDistance / distance))
+            );
+            remainingDistance -= TrailConfig.SimulationSpeed * Time.deltaTime;
 
-			Vector3 spreadAmount = ShootConfig.GetSpread(focusLerp);
+            yield return null;
+        }
 
-			Vector3 shootDirection = ShootSystem.transform.forward;
-			Model.transform.forward += Model.transform.TransformDirection(spreadAmount);
-			shootDirection.Normalize();
-			if (Physics.Raycast(ShootSystem.transform.position, shootDirection, out RaycastHit hit, float.MaxValue, ShootConfig.HitMask))
-			{
-				ActiveMonoBehaviour.StartCoroutine(PlayTrail(
-					ShootSystem.transform.position, hit.point, hit
-				));
-			}
-			else
-			{
-				ActiveMonoBehaviour.StartCoroutine(PlayTrail(
-					ShootSystem.transform.position, ShootSystem.transform.position + (shootDirection * TrailConfig.MissDistance), new RaycastHit()
-				));
-			}
-		}
-	}
+        instance.transform.position = EndPoint;
 
+        if (Hit.collider != null)
+        {
+            // TODO impact effect here
+            if (Hit.collider.TryGetComponent(out IDamageable damageable))
+            {
+                damageable.TakeDamage(DmgConfig.GetDamage(distance));
+            }
+        }
 
-	private IEnumerator PlayTrail(Vector3 StartPoint, Vector3 EndPoint, RaycastHit Hit)
-	{
-		TrailRenderer instance = TrailPool.Get();
-		instance.gameObject.SetActive(true);
-		instance.transform.position = StartPoint;
-		yield return null; // avoid position carry-over from last frame if reused
+        yield return new WaitForSeconds(TrailConfig.Duration);
+        yield return null;
+        instance.emitting = false;
+        instance.gameObject.SetActive(false);
+        TrailPool.Release(instance);
+    }
 
-		instance.emitting = true;
+    private TrailRenderer CreateTrail()
+    {
+        GameObject instance = new("Trail Renderer");
+        TrailRenderer trail = instance.AddComponent<TrailRenderer>();
 
-		float distance = Vector3.Distance(StartPoint, EndPoint);
-		float remainingDistance = distance;
-		while (remainingDistance > 0)
-		{
-			instance.transform.position = Vector3.Lerp(
-				StartPoint,
-				EndPoint,
-				Mathf.Clamp01(1 - (remainingDistance / distance))
-			);
-			remainingDistance -= TrailConfig.SimulationSpeed * Time.deltaTime;
+        trail.colorGradient = TrailConfig.Color;
+        trail.material = TrailConfig.Material;
+        trail.widthCurve = TrailConfig.WidthCurve;
+        trail.time = TrailConfig.Duration;
+        trail.minVertexDistance = TrailConfig.MinVertexDistance;
 
-			yield return null;
-		}
+        trail.emitting = false;
+        trail.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 
-		instance.transform.position = EndPoint;
-
-		yield return new WaitForSeconds(TrailConfig.Duration);
-		yield return null;
-		instance.emitting = false;
-		instance.gameObject.SetActive(false);
-		TrailPool.Release(instance);
-	}
-
-	private TrailRenderer CreateTrail()
-	{
-		GameObject instance = new("Trail Renderer");
-		TrailRenderer trail = instance.AddComponent<TrailRenderer>();
-
-		trail.colorGradient = TrailConfig.Color;
-		trail.material = TrailConfig.Material;
-		trail.widthCurve = TrailConfig.WidthCurve;
-		trail.time = TrailConfig.Duration;
-		trail.minVertexDistance = TrailConfig.MinVertexDistance;
-
-		trail.emitting = false;
-		trail.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-
-		return trail;
-	}
+        return trail;
+    }
 }

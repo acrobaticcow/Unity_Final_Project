@@ -8,9 +8,9 @@ public class EnemyLineOfSightCheck : MonoBehaviour
 	public float FieldOfView = 90f;
 	public LayerMask LineOfSightLayers;
 
-	public delegate void GainSightEvent(Controller controller);
+	public delegate void GainSightEvent(Player controller);
 	public GainSightEvent OnGainSight;
-	public delegate void LoseSightEvent(Controller controller);
+	public delegate void LoseSightEvent(Player controller);
 	public LoseSightEvent OnLoseSight;
 
 	private Coroutine CheckForLineOfSightCoroutine;
@@ -22,7 +22,7 @@ public class EnemyLineOfSightCheck : MonoBehaviour
 
 	private void OnTriggerEnter(Collider other)
 	{
-		if (other.TryGetComponent(out Controller controller))
+		if (other.TryGetComponent(out Player controller))
 		{
 			if (!CheckLineOfSight(controller))
 			{
@@ -33,7 +33,7 @@ public class EnemyLineOfSightCheck : MonoBehaviour
 
 	private void OnTriggerExit(Collider other)
 	{
-		if (other.TryGetComponent(out Controller controller))
+		if (other.TryGetComponent(out Player controller))
 		{
 			OnLoseSight?.Invoke(controller);
 			if (CheckForLineOfSightCoroutine != null)
@@ -43,7 +43,7 @@ public class EnemyLineOfSightCheck : MonoBehaviour
 		}
 	}
 
-	private bool CheckLineOfSight(Controller controller)
+	private bool CheckLineOfSight(Player controller)
 	{
 		Vector3 Direction = (controller.transform.position - transform.position).normalized;
 		float DotProduct = Vector3.Dot(transform.forward, Direction);
@@ -51,7 +51,7 @@ public class EnemyLineOfSightCheck : MonoBehaviour
 		{
 			if (Physics.Raycast(transform.position, Direction, out RaycastHit Hit, Collider.radius, LineOfSightLayers))
 			{
-				if (Hit.transform.GetComponent<Controller>() != null)
+				if (Hit.transform.GetComponent<Player>() != null)
 				{
 					OnGainSight?.Invoke(controller);
 					return true;
@@ -62,7 +62,7 @@ public class EnemyLineOfSightCheck : MonoBehaviour
 		return false;
 	}
 
-	private IEnumerator CheckForLineOfSight(Controller controller)
+	private IEnumerator CheckForLineOfSight(Player controller)
 	{
 		WaitForSeconds Wait = new(0.1f);
 

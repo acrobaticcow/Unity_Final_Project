@@ -1,109 +1,110 @@
-using UnityEngine.AI;
 using UnityEngine;
-public abstract class Enemy : PoolableObject, IDamageable
+using UnityEngine.AI;
+
+public abstract class Enemy : PoolableObject
 {
-	public EnemyLineOfSightCheck LineOfSightChecker;
-	public AttackRadius AttackRadius;
-	public Animator Animator;
-	public NavMeshAgent Agent;
-	public EnemyMovement Movement;
-	public EnemyScriptableObject EnemyScriptableObject;
-	public int Health = 100;
+    public EnemyHealth Health;
+    public EnemyLineOfSightCheck LineOfSightChecker;
+    public AttackRadius AttackRadius;
+    public Animator Animator;
+    public NavMeshAgent Agent;
+    public EnemyMovement Movement;
+    public EnemyScriptableObject EnemyScriptableObject;
 
-	public EnemyState DefaultState;
-	private EnemyState _state;
-	public EnemyState State
-	{
-		get
-		{
-			return _state;
-		}
-		set
-		{
-			OnStateChange?.Invoke(_state, value);
-			_state = value;
-		}
-	}
-	public float IdleLocationRadius = 4f;
+    public EnemyState DefaultState;
+    private EnemyState _state;
+    public EnemyState State
+    {
+        get { return _state; }
+        set
+        {
+            OnStateChange?.Invoke(_state, value);
+            _state = value;
+        }
+    }
 
-	public float IdleMoveSpeedMultiplier = 0.5f;
+    public float IdleLocationRadius = 4f;
 
-	public delegate void StateChangeEvent(EnemyState oldState, EnemyState newState);
-	public StateChangeEvent OnStateChange;
+    public float IdleMoveSpeedMultiplier = 0.5f;
 
-	public virtual void Awake()
-	{
-		OnStateChange += HandleStateChange;
+    public delegate void StateChangeEvent(EnemyState oldState, EnemyState newState);
+    public StateChangeEvent OnStateChange;
 
-		LineOfSightChecker.OnGainSight += HandleGainSight;
-		LineOfSightChecker.OnLoseSight += HandleLoseSight;
-	}
+    public virtual void Awake()
+    {
+        OnStateChange += HandleStateChange;
 
-	public virtual void Update() { }
-	public virtual void Start() { }
+        LineOfSightChecker.OnGainSight += HandleGainSight;
+        LineOfSightChecker.OnLoseSight += HandleLoseSight;
+    }
 
-	public void Spawn()
-	{
-		Movement.SampleWaypoints();
-		OnStateChange?.Invoke(EnemyState.Spawn, DefaultState);
-	}
-	private void HandleGainSight(Controller player)
-	{
-		State = EnemyState.Chase;
-	}
+    public virtual void Start()
+    {
+        // TODO Health.OnTakeDamage += PainResponse.HandlePain;
+        Health.OnDeath += Die;
+    }
 
-	private void HandleLoseSight(Controller player)
-	{
-		State = DefaultState;
-	}
+    public virtual void Update() { }
 
-	private void HandleStateChange(EnemyState oldState, EnemyState newState)
-	{
-		if (oldState != newState)
-		{
-			Movement.StopMovement();
+    public void Spawn()
+    {
+        Movement.SampleWaypoints();
+        OnStateChange?.Invoke(EnemyState.Spawn, DefaultState);
+    }
 
-			if (oldState == EnemyState.Idle)
-			{
-				Agent.speed /= IdleMoveSpeedMultiplier;
-			}
+    private void HandleGainSight(Player player)
+    {
+        State = EnemyState.Chase;
+    }
 
-			switch (newState)
-			{
-				case EnemyState.Idle:
-					Movement.StartIdleMotion();
-					break;
-				case EnemyState.Patrol:
-					Movement.StartPatrolMotion();
-					break;
-				case EnemyState.Chase:
-					Movement.StartChasing();
-					break;
-			}
-		}
-	}
+    private void HandleLoseSight(Player player)
+    {
+        State = DefaultState;
+    }
 
-	public virtual void OnEnable()
-	{
-	}
-	public override void OnDisable()
-	{
-		base.OnDisable();
-		Agent.enabled = false;
-		_state = DefaultState;
-	}
-	public void TakeDamage(int Damage)
-	{
-		Health -= Damage;
+    private void HandleStateChange(EnemyState oldState, EnemyState newState)
+    {
+        if (oldState != newState)
+        {
+            Movement.StopMovement();
 
-		if (Health <= 0)
-		{
-			gameObject.SetActive(false);
-		}
-	}
+            if (oldState == EnemyState.Idle)
+            {
+                Agent.speed /= IdleMoveSpeedMultiplier;
+            }
 
-	public Transform GetTransform()
-	{
-		return transform;
-	}
+            switch (newState)
+            {
+                case EnemyState.Idle:
+                    Movement.StartIdleMotion();
+                    break;
+                case EnemyState.Patrol:
+                    Movement.StartPatrolMotion();
+                    break;
+                case EnemyState.Chase:
+                    Movement.StartChasing();
+                    break;
+            }
+        }
+    }
+
+    void Die(Vector3 Position)
+    {
+        Movement.DisableMovement();
+        // TODO PainResponse.HandleDeath();
+    }
+
+    public virtual void OnEnable() { }
+
+    public override void OnDisable()
+    {
+        base.OnDisable();
+        Agent.enabled = false;
+        _state = DefaultState;
+    }
+
+    public Transform GetTransform()
+    {
+        return transform;
+    }
 }

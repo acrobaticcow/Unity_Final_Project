@@ -173,6 +173,7 @@ GameObject:
   - component: {fileID: 765231350327199494}
   - component: {fileID: 1421381622700480724}
   - component: {fileID: 7294184624204232651}
+  - component: {fileID: -1121704241586469226}
   m_Layer: 8
   m_Name: Zombie
   m_TagString: Untagged
@@ -282,16 +283,28 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cb475413edc4d944f927853c85eeb989, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  Health: {fileID: -1121704241586469226}
   LineOfSightChecker: {fileID: 6780595579760709253}
   AttackRadius: {fileID: 111813951420240780}
   Animator: {fileID: 262649962718415296}
   Agent: {fileID: 1421381622700480724}
   Movement: {fileID: 5276466205912408286}
   EnemyScriptableObject: {fileID: 11400000, guid: ff79ef29bcc0f4744a8f6412d2e73daf, type: 2}
-  Health: 100
   DefaultState: 2
   IdleLocationRadius: 4
   IdleMoveSpeedMultiplier: 0.5
+--- !u!114 &-1121704241586469226
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1108662032540766387}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9824e63e8aa7b794c9b5913a037c365a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1123489804158636207
 GameObject:
   m_ObjectHideFlags: 0

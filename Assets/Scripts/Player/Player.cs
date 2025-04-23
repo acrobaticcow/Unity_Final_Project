@@ -2,7 +2,8 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 
 [DisallowMultipleComponent]
-public class Controller : MonoBehaviour, IDamageable
+// TODO put IDamageable in
+public class Player : MonoBehaviour
 {
     public Animator animator;
     const string velocityConst = "Velocity";
@@ -38,18 +39,21 @@ public class Controller : MonoBehaviour, IDamageable
 
     [Header("Aim")]
     public FieldOfView FieldOfView;
-    public float AimAngle;
+
+    [SerializeField]
+    float AimAngle;
+    public static float _aimAngle;
     public float AimSpeed;
     float defaultViewAngle;
     float tAim;
     public FOVVisualization FOVVisualization;
 
     [Header("Focus")]
-    float initialFocusAngle;
-    float currentFocusAngle;
-
-    float tFocus;
     public float FocusSpeed;
+
+    Vector3 boundRight;
+
+    Vector3 boundLeft;
 
     void Awake()
     {
@@ -64,12 +68,13 @@ public class Controller : MonoBehaviour, IDamageable
         viewCamera = Camera.main;
         bounds.Expand(-2 * skinWidth);
         defaultViewAngle = FieldOfView.ViewAngle;
-        initialFocusAngle = AimAngle;
+        _aimAngle = AimAngle;
     }
 
     void Update()
     {
         Aim();
+        SpreadIndicator();
         gunSelector.ActiveGun.Tick(
             Application.isFocused
                 && Mouse.current.leftButton.isPressed
@@ -87,8 +92,8 @@ public class Controller : MonoBehaviour, IDamageable
     void Aim()
     {
         bool isPressed = Mouse.current.rightButton.isPressed;
-        float endAngle = isPressed ? AimAngle : defaultViewAngle;
-        float startAngle = isPressed ? defaultViewAngle : AimAngle;
+        float endAngle = isPressed ? _aimAngle : defaultViewAngle;
+        float startAngle = isPressed ? defaultViewAngle : _aimAngle;
         float currentViewAngle = FieldOfView.ViewAngle;
         if (isPressed != prevRightButtonPressed)
         {
@@ -105,47 +110,57 @@ public class Controller : MonoBehaviour, IDamageable
             tAim = 0;
         }
 
-        if (AimAngle == currentViewAngle && isPressed)
-        {
-            TryToFocus(isPressed);
-        }
         prevRightButtonPressed = isPressed;
     }
 
-    private void TryToFocus(bool isFocus)
+    private void SpreadIndicator()
     {
-        Vector3 from = gunSelector.ActiveGun.Model.transform.position;
-        float spread = gunSelector.ActiveGun.ShootConfig.MinSpread;
-        float startOffset = 1f;
-
-        Vector3 startBoundRight =
-            Quaternion.AngleAxis(AimAngle / 2, Vector3.up) * FOVVisualization.transform.forward;
-        Vector3 startBoundLeft =
-            Quaternion.AngleAxis(-AimAngle / 2, Vector3.up) * FOVVisualization.transform.forward;
-        Vector3 minBoundRight = (
-            FOVVisualization.transform.forward + FOVVisualization.transform.right * spread
-        ).normalized;
-        Vector3 minBoundRLeft = (
-            FOVVisualization.transform.forward - FOVVisualization.transform.right * spread
-        ).normalized;
-        Vector3 boundRight = Vector3.zero;
-        Vector3 boundLeft = Vector3.zero;
-
-        // I need to know the start bound the target bound and the current bound
-
-        if (tFocus < 1)
+        if (_aimAngle == FieldOfView.ViewAngle)
         {
-            tFocus += Time.deltaTime * FocusSpeed;
-            boundRight = Vector3.Lerp(startBoundRight, minBoundRight, tFocus);
-            boundLeft = Vector3.Lerp(startBoundLeft, minBoundRLeft, tFocus);
+            GunSO activeGun = gunSelector.ActiveGun;
+            Vector3 from = activeGun.Model.transform.position;
+            float startOffset = 2f;
+            float length = 2f;
+            float spread = activeGun.ShootConfig.MinSpread;
+
+            Vector3 maxSpreadRight =
+                Quaternion.AngleAxis(_aimAngle / 2, Vector3.up)
+                * FOVVisualization.transform.forward;
+            Vector3 maxSpreadLeft =
+                Quaternion.AngleAxis(-_aimAngle / 2, Vector3.up)
+                * FOVVisualization.transform.forward;
+            Vector3 minSpreadRight = (
+                FOVVisualization.transform.forward + FOVVisualization.transform.right * spread
+            ).normalized;
+            Vector3 minSpreadLeft = (
+                FOVVisualization.transform.forward - FOVVisualization.transform.right * spread
+            ).normalized;
+
+            // I need to know the start bound the target bound and the current bound
+
+            if (activeGun.tSpread < 1)
+            {
+                activeGun.tSpread += Time.deltaTime * activeGun.ShootConfig.RecoilRecoverySpeed;
+                boundRight = Vector3.Lerp(maxSpreadRight, minSpreadRight, activeGun.tSpread);
+                boundLeft = Vector3.Lerp(maxSpreadLeft, minSpreadLeft, activeGun.tSpread);
+            }
+
+            boundRight = Vector3.Lerp(maxSpreadRight, minSpreadRight, activeGun.tSpread);
+            boundLeft = Vector3.Lerp(maxSpreadLeft, minSpreadLeft, activeGun.tSpread);
+
+            Debug.DrawRay(
+                from + boundRight * startOffset,
+                boundRight.normalized * length,
+                Color.red
+            );
+            Debug.DrawRay(from + boundLeft * startOffset, boundLeft.normalized * length, Color.red);
         }
         else
         {
-            tFocus = 0;
+            boundRight = Vector3.zero;
+            boundLeft = Vector3.zero;
+            gunSelector.ActiveGun.tSpread = 0;
         }
-
-        Debug.DrawRay(from + boundRight * startOffset, boundRight.normalized * 5f, Color.red);
-        Debug.DrawRay(from + boundLeft * startOffset, boundLeft.normalized * 5f, Color.red);
     }
 
     float EaseOutCirc(float t)
