@@ -15,10 +15,10 @@ TagManager:
   - Player
   - Enemy
   - Mask
-  - Black
+  - GrayScale
   - Ground
   - EnemyDetectionRadius
-  - 
+  - UpperViewMask
   - 
   - 
   - 

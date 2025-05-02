@@ -59,6 +59,8 @@
 	"dotnet.defaultSolution": "Final Project.sln",
 	"cSpell.words": [
 		"Blit",
+		"Fororientation",
+		"Partitioner",
 		"Poolable"
 	]
 }

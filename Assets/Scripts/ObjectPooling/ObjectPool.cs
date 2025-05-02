@@ -14,11 +14,13 @@ public class ObjectPool
         available = new(size);
     }
 
-    public static ObjectPool CreateInstance(PoolableObject prefab, int size)
+    public static ObjectPool CreateInstance(PoolableObject prefab, int size, LayerMask layer)
     {
         ObjectPool pool = new(prefab, size);
         // put all the child under the game object pool, help with scene management
         GameObject gameObj = new(prefab.name + "Pool");
+        Debug.Log("layer" + layer.value);
+        gameObj.layer = LayerMask.NameToLayer("Enemy");
         pool.CreateObject(gameObj.transform, size);
         return pool;
     }

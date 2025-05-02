@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!114 &-6107691342021720870
+--- !u!114 &-2084439778049036425
 MonoBehaviour:
   m_ObjectHideFlags: 11
   m_CorrespondingSourceObject: {fileID: 0}
@@ -21,7 +21,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: GrayScaleMat
-  m_Shader: {fileID: -6465566751694194690, guid: cfa94501ed450eb44bd75b23687ca0fc, type: 3}
+  m_Shader: {fileID: -6465566751694194690, guid: 0f3c8992edd628a4b985543549d2b5fd, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -51,6 +51,7 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _Darkness: 0.5
     - _QueueControl: 0
     - _QueueOffset: 0
     m_Colors: []
